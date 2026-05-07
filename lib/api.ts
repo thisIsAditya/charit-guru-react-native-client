@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { authClient } from '@/lib/auth-client';
 
 const BASE = process.env['EXPO_PUBLIC_API_URL'] ?? 'http://localhost:8000';
 
@@ -13,20 +13,17 @@ export class ApiError extends Error {
   }
 }
 
-async function getSessionCookie(): Promise<string> {
-  return (await SecureStore.getItemAsync('session_cookie')) ?? '';
-}
-
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const cookie = await getSessionCookie();
+  const cookie = authClient.getCookie();
 
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      cookie,
+      ...(cookie ? { cookie } : {}),
       ...init?.headers,
     },
+    credentials: 'omit',
   });
 
   if (!res.ok) {
@@ -39,6 +36,10 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
       body.code,
       body.upgrade_required,
     );
+  }
+
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T;
   }
 
   return res.json() as Promise<T>;
@@ -67,6 +68,7 @@ export const apiClient = {
     get: (id: string) => api<{ conversation: Conversation }>(`/v1/conversations/${id}`),
     messages: (id: string, limit = 50) =>
       api<{ messages: Message[] }>(`/v1/conversations/${id}/messages?limit=${limit}`),
+    delete: (id: string) => api<void>(`/v1/conversations/${id}`, { method: 'DELETE' }),
   },
 
   guru: {
@@ -142,6 +144,7 @@ export interface UserProfile {
 
 export interface Plan {
   id: string; display_name: string; llm_model: string;
+  description: string;
   rag_chunk_limit: number; knowledge_base_tier: string;
   memory_read_days: number | null; memory_result_limit: number;
   session_active_days: number; max_input_tokens: number; max_output_tokens: number;

@@ -22,26 +22,34 @@ export default function AppLayout() {
         }}
       >
         <Tabs.Screen
+          name="profile/index"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          }}
+        />
+        <Tabs.Screen name="profile/memories" options={{ href: null }} />
+        <Tabs.Screen name="profile/upgrade" options={{ href: null }} />
+
+        <Tabs.Screen
           name="chat"
           options={{
             title: 'Chat',
             tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
           }}
         />
+
         <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
+          name="settings/index"
           options={{
             title: 'Settings',
             tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
           }}
         />
+        <Tabs.Screen name="settings/guru" options={{ href: null }} />
+        <Tabs.Screen name="settings/integrations" options={{ href: null }} />
+        <Tabs.Screen name="settings/notifications" options={{ href: null }} />
+        <Tabs.Screen name="settings/support" options={{ href: null }} />
       </Tabs>
     </View>
   );

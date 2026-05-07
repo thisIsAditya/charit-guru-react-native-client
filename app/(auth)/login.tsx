@@ -1,10 +1,8 @@
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
-import * as WebBrowser from 'expo-web-browser';
+import { router } from 'expo-router';
 import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/Button';
-
-WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
@@ -13,16 +11,16 @@ export default function LoginScreen() {
   async function handleGoogleSignIn() {
     setLoading(true);
     setError('');
-    try {
-      await authClient.signIn.social({
-        provider: 'google',
-        callbackURL: '/(auth)/callback',
-      });
-    } catch (err) {
+    const { error: authError } = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: '/callback',
+    });
+    if (authError) {
       setError('Sign-in failed. Please try again.');
-    } finally {
       setLoading(false);
+      return;
     }
+    router.replace('/(app)/chat');
   }
 
   return (

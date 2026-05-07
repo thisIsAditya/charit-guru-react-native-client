@@ -1,27 +1,21 @@
 import { useEffect } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 import { authClient } from '@/lib/auth-client';
 import { apiClient } from '@/lib/api';
 import { useSession } from '@/lib/store';
 
 export default function CallbackScreen() {
-  const { setSession, setSubscription } = useSession();
-  const params = useLocalSearchParams();
+  const { setSession, setSubscription, clearSession } = useSession();
 
   useEffect(() => {
     (async () => {
       try {
         const sessionData = await authClient.getSession();
-        if (!sessionData?.session) {
+        if (!sessionData?.data?.session) {
           router.replace('/(auth)/login');
           return;
         }
-
-        // Store the session cookie for subsequent API calls
-        const cookieHeader = `better-auth.session_token=${sessionData.session.token}`;
-        await SecureStore.setItemAsync('session_cookie', cookieHeader);
 
         const [meRes, subRes] = await Promise.all([
           apiClient.auth.me(),
@@ -30,13 +24,13 @@ export default function CallbackScreen() {
 
         setSession(meRes.user, meRes.plan);
         setSubscription(subRes.subscription);
-
         router.replace('/(app)/chat');
       } catch {
+        await clearSession();
         router.replace('/(auth)/login');
       }
     })();
-  }, [params]);
+  }, []);
 
   return (
     <View className="flex-1 bg-white items-center justify-center">

@@ -1,9 +1,10 @@
+import '../global.css';
 import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { authClient } from '@/lib/auth-client';
 import { apiClient } from '@/lib/api';
 import { useSession } from '@/lib/store';
 
@@ -19,8 +20,11 @@ function SessionLoader() {
   useEffect(() => {
     (async () => {
       try {
-        const cookie = await SecureStore.getItemAsync('session_cookie');
-        if (!cookie) { router.replace('/(auth)/login'); return; }
+        const sessionData = await authClient.getSession();
+        if (!sessionData?.data?.session) {
+          router.replace('/(auth)/login');
+          return;
+        }
 
         const [meRes, subRes] = await Promise.all([
           apiClient.auth.me(),
